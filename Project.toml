@@ -1,0 +1,13 @@
+name = "TreeRefinedGrid"
+uuid = "7ceb6d7b-5a8b-49f0-8740-53c32ecff0af"
+authors = ["Lars Mejnertsen"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
