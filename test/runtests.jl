@@ -30,7 +30,6 @@ using Test
         coarsen!(cell)
         @test !BlockRefinedGrid.haschildren(cell)
 
-        subcells = children(cell)
         @test cellorigin(cell) ≈ X0
         @test cellwidth(cell) ≈ W0
     end
