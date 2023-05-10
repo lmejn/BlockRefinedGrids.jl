@@ -1,54 +1,131 @@
 using BlockRefinedGrid
+using AbstractTrees
 using Test
+
+import Base.isapprox
+
+function isapprox(c1::GridCell, c2::GridCell)
+    c1.origin ≈ c2.origin && c1.width ≈ c2.width
+end
 
 @testset "BlockRefinedGrid.jl" begin
 
-    @testset "Refinement" begin
-        X0 = 10*rand()
-        W0 = 20*rand()
-        cell = GridCell(X0, W0)
+    function test_refinement(N)
+        x = rand(N)
+        w = rand(N)
+        cell = GridCell(x, w)
         refine!(cell)
+
+        @test BlockRefinedGrid.haschildren(cell)
+        @test length(children(cell)) == 2^N
+
+        idims = Tuple(fill(2, N))
+        linear_indices = LinearIndices(idims)
+        for index in CartesianIndices(idims)
+            offset = Tuple(index).-1
+            @test cell[linear_indices[index]] ≈ GridCell(x.+offset.*w/2, w/2)
+        end
+    end
+
+    function test_coarsen(N, nrefine=3)
+        x = rand(N)
+        w = rand(N)
+        cell = GridCell(x, w)
+        for _=1:nrefine
+            refine!(cell, x.+rand(N).*w)
+        end
+
         @test BlockRefinedGrid.haschildren(cell)
 
-        subcells = children(cell)
-
-        @test length(subcells) == 2
-
-        @test cellorigin(subcells[1]) ≈ X0
-        @test cellwidth(subcells[1]) ≈ W0/2
-
-        @test cellorigin(subcells[2]) ≈ X0 + W0/2
-        @test cellwidth(subcells[2]) ≈ W0/2
-    end
-
-    @testset "Coarsen" begin
-        X0 = -10.
-        W0 = 20.
-        subcells = [GridCell(X0, W0/2), GridCell(X0 + W0/2, W0/2)]
-        cell = GridCell(X0, W0, subcells)
-
         coarsen!(cell)
+
         @test !BlockRefinedGrid.haschildren(cell)
 
-        @test cellorigin(cell) ≈ X0
-        @test cellwidth(cell) ≈ W0
+        @test cell ≈ GridCell(x, w)
+
     end
 
-    @testset "Find Cell" begin
-        cell = GridCell(0., 1.)
-        @test findcell(cell, rand()) == cell
+    function setup_findcell_test(N, nrefine=3)
+        x = rand(N)
+        w = rand(N)
 
-        @test findcell(cell, 1.4) === nothing
+        cell = GridCell(x, w)
+        @test findcell(cell, x.+w.*rand(N)) ≈ cell
 
-        refine!(cell)
-        refine!(cell[2])
-        @test findcell(cell, 0.6) == cell[2, 1]
+        for _=1:nrefine
+            refine!(cell, x.+rand(N).*w)
+        end
 
-        cell = GridCell(0., 1.)
-        refine!(cell, 0.75)
-        refine!(cell, 0.75)
-        @test findcell(cell, 0.6) == cell[2, 1]
+        x, w, cell
+    end
 
+    @testset "1D" begin
+        N = 1
+        @testset "Refinement" test_refinement(N)
+
+        @testset "Coarsen" test_coarsen(N)
+
+        @testset "In Cell" begin
+            x = rand(N)
+            w = rand(N)
+            cell = GridCell(x, w)
+
+            @test BlockRefinedGrid.incell(cell, @. x+0.1*w)
+            @test !BlockRefinedGrid.incell(cell, @. x+1.1*w)
+            @test !BlockRefinedGrid.incell(cell, @. x-0.1*w)
+
+        end
+
+        @testset "Find Cell" begin
+            x, w, cell = setup_findcell_test(N)
+
+            @test findcell(cell, @. x+1.1*w) === nothing
+            @test findcell(cell, @. x-0.1) === nothing
+
+            xᵢ = x.+rand(N).*w
+            @test BlockRefinedGrid.incell(findcell(cell, xᵢ), xᵢ)
+
+        end
+    end
+
+    @testset "2D" begin
+        N = 2
+        @testset "Refinement" test_refinement(N)
+
+        @testset "Coarsen" test_coarsen(N)
+
+        @testset "Find Cell" begin
+            x, w, cell = setup_findcell_test(N)
+
+            @test findcell(cell, @. x + [ 1.1, rand()]*w) === nothing
+            @test findcell(cell, @. x + [-0.1, rand()]*w) === nothing
+            @test findcell(cell, @. x + [rand(),  1.1]*w) === nothing
+            @test findcell(cell, @. x + [rand(), -0.1]*w) === nothing
+
+            xᵢ = x.+w.*rand(N)
+            @test BlockRefinedGrid.incell(findcell(cell, xᵢ), xᵢ)
+        end
+    end
+
+    @testset "3D" begin
+        N = 3
+        @testset "Refinement" test_refinement(N)
+
+        @testset "Coarsen" test_coarsen(N)
+
+        @testset "Find Cell" begin
+            x, w, cell = setup_findcell_test(N)
+
+            @test findcell(cell, @. x + [ 1.1, rand(), rand()]*w) === nothing
+            @test findcell(cell, @. x + [-0.1, rand(), rand()]*w) === nothing
+            @test findcell(cell, @. x + [rand(),  1.1, rand()]*w) === nothing
+            @test findcell(cell, @. x + [rand(), -0.1, rand()]*w) === nothing
+            @test findcell(cell, @. x + [rand(), rand(),  1.1]*w) === nothing
+            @test findcell(cell, @. x + [rand(), rand(), -0.1]*w) === nothing
+
+            xᵢ = x.+w.*rand(N)
+            @test BlockRefinedGrid.incell(findcell(cell, xᵢ), xᵢ)
+        end
     end
 
 end
