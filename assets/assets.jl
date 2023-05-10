@@ -48,6 +48,7 @@ end
 begin
     tree = pretty_tree()
     p = plotcell(tree; aspect_ratio=1, color=1, legend=false)
+    plot!(p, axis=([], false))
     savefig(p, "assets/cell_refine_pretty.svg")
     p
 end

@@ -22,6 +22,7 @@ We can refine the cell, which splits the cell in half, creating two more cells i
 refine!(cell)
 ```
 In this figure, the grid is refined twice.
+
 ![Refined](assets/cell_refine.svg)
 
 The cell can also be coarsened, which removes all subcells in `cell`:
@@ -36,6 +37,7 @@ This returns the first subcell of the 2nd subcell of the first subcell of the ro
 cell[1, 2]
 ```
 Orange shows `cell[1]` and green shows `cell[1, 2]`:
+
 ![Indexed](assets/cell_indexed.svg)
 
 Cells can also be located by position.
@@ -45,6 +47,7 @@ x = [2., -3.]
 findcell(cell, x)
 ```
 The green position is within the orange cell:
+
 ![Find Cell](assets/cell_findcell.svg)
 
 This functionality is combined with refinement which allows you to refine a cell at a position `x`:
@@ -52,7 +55,8 @@ This functionality is combined with refinement which allows you to refine a cell
 x = [2., -3.]
 refine!(cell, x)
 ```
-The orange cell containingt the green position has been refined:
+The orange cell containing the green position has been refined:
+
 ![Refine at position](assets/cell_refine_findcell.svg)
 
 
