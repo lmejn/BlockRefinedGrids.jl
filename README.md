@@ -1,6 +1,6 @@
 # Block Refined Grids
 
-[![Build Status](https://github.com/lmejn/BlockRefinedGrid.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/lmejn/BlockRefinedGrid.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![CI](https://github.com/lmejn/BlockRefinedGrids.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/lmejn/BlockRefinedGrids.jl/actions/workflows/CI.yml)
 
 A small package for creating block refined grids.
 
