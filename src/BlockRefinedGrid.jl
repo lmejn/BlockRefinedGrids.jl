@@ -1,4 +1,4 @@
-module TreeRefinedGrid
+module BlockRefinedGrid
 
 # Write your package code here.
 

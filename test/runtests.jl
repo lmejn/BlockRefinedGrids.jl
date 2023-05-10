@@ -1,6 +1,6 @@
-using TreeRefinedGrid
+using BlockRefinedGrid
 using Test
 
-@testset "TreeRefinedGrid.jl" begin
+@testset "BlockRefinedGrid.jl" begin
     # Write your tests here.
 end
