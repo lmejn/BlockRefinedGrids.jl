@@ -127,6 +127,7 @@ end
 Return the cell containing position `x`, `nothing` if `x` not in the cell 
 """
 function findcell(cell, x)
+    @assert length(cellorigin(cell)) == length(x)
     if incell(cell, x)
         !haschildren(cell) && return cell
         for child in children(cell)
