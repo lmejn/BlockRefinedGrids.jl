@@ -1,6 +1,6 @@
 module BlockRefinedGrid
 
-using AbstractTrees
+using AbstractTrees, StaticArrays
 import Base.getindex, Base.checkbounds
 
 export GridCell, cellorigin, cellwidth, cellcenter, cellbounds
@@ -12,11 +12,16 @@ export findcell
 
 Stores a block refined grid in a tree
 """
-struct GridCell
-    origin::Float64
-    width::Float64
-    children::Vector{GridCell}
-    GridCell(origin, width, children=GridCell[]) = new(origin, width, children)
+struct GridCell{N, T}
+    origin::SVector{N, T}
+    width::SVector{N, T}
+    children::Vector{GridCell{N, T}}
+    function GridCell(origin, width, children=GridCell[])
+        origin, width = promote(origin, width)
+        N = length(origin)
+        T = eltype(origin)
+        new{N, T}(origin, width, children)
+    end
 end
 
 # Abstract Tree functions
@@ -86,15 +91,25 @@ Refine the cell
 
 If position `x` is given, it will refine the cell containing `x`.
 """
-function refine!(cell::GridCell)
+function refine!(cell::GridCell{N, T}) where {N, T<:Number}
     origin = cellorigin(cell)
-    width = cellwidth(cell)
+    subwidth = 0.5*cellwidth(cell)
 
-    resize!(cell.children, 2)
+    resize!(cell.children, 2^N)
+
+    idims = Tuple(sfill(2, N))
+    linear_indices = LinearIndices(idims)
     
-    cell.children .= [GridCell(origin, 0.5*width),
-                      GridCell(origin+0.5*width, 0.5*width)]
+    for index in CartesianIndices(idims)
+        offset = SVector(Tuple(index)).-1
+        suborigin = origin + offset.*subwidth
+        child = GridCell(suborigin, subwidth)
+
+        i = linear_indices[index]
+        cell.children[i] = child
+    end
 end
+sfill(v, n) = @SVector fill(v, n)
 
 """
     incell(cell::GridCell, x)
@@ -103,7 +118,7 @@ Return `true` if position `x` is in the cell
 """
 function incell(cell::GridCell, x)
     xmin, xmax = cellbounds(cell)
-    xmin<=x<xmax
+    all(xmin.<=x.<xmax)
 end
 
 """
@@ -122,7 +137,7 @@ function findcell(cell, x)
     nothing
 end
 
-function refine!(cell::GridCell, x::Float64)
+function refine!(cell::GridCell, x)
     cell = findcell(cell, x)
     cell===nothing && return
     refine!(cell)
