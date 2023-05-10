@@ -5,6 +5,7 @@ import Base.getindex, Base.checkbounds
 
 export GridCell, cellorigin, cellwidth, cellcenter, cellbounds
 export coarsen!, refine!
+export findcell
 
 """
     GridCell
@@ -79,9 +80,11 @@ Reduce the refinement of the cell
 coarsen!(cell::GridCell) = resize!(cell.children, 0)
 
 """
-    refine!(cell::GridCell)
+    refine!(cell::GridCell[, x::Float64])
 
 Refine the cell
+
+If position `x` is given, it will refine the cell containing `x`.
 """
 function refine!(cell::GridCell)
     origin = cellorigin(cell)
@@ -91,6 +94,38 @@ function refine!(cell::GridCell)
     
     cell.children .= [GridCell(origin, 0.5*width),
                       GridCell(origin+0.5*width, 0.5*width)]
+end
+
+"""
+    incell(cell::GridCell, x)
+
+Return `true` if position `x` is in the cell
+"""
+function incell(cell::GridCell, x)
+    xmin, xmax = cellbounds(cell)
+    xmin<=x<xmax
+end
+
+"""
+    findcell(cell, x)
+
+Return the cell containing position `x`, `nothing` if `x` not in the cell 
+"""
+function findcell(cell, x)
+    if incell(cell, x)
+        !haschildren(cell) && return cell
+        for child in children(cell)
+            cell = findcell(child, x)
+            !(cell===nothing) && return cell
+        end
+    end
+    nothing
+end
+
+function refine!(cell::GridCell, x::Float64)
+    cell = findcell(cell, x)
+    cell===nothing && return
+    refine!(cell)
 end
 
 end

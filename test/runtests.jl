@@ -35,4 +35,21 @@ using Test
         @test cellwidth(cell) ≈ W0
     end
 
+    @testset "Find Cell" begin
+        cell = GridCell(0., 1.)
+        @test findcell(cell, rand()) == cell
+
+        @test findcell(cell, 1.4) === nothing
+
+        refine!(cell)
+        refine!(cell[2])
+        @test findcell(cell, 0.6) == cell[2, 1]
+
+        cell = GridCell(0., 1.)
+        refine!(cell, 0.75)
+        refine!(cell, 0.75)
+        @test findcell(cell, 0.6) == cell[2, 1]
+
+    end
+
 end
