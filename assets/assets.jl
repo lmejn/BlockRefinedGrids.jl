@@ -1,3 +1,5 @@
+#  Script for creating figures seen in the README
+
 using BlockRefinedGrid
 using Plots, AbstractTrees
 
