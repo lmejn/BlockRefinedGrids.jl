@@ -4,6 +4,7 @@ using AbstractTrees
 import Base.getindex, Base.checkbounds
 
 export GridCell, cellorigin, cellwidth, cellcenter, cellbounds
+export coarsen!, refine!
 
 """
     GridCell
@@ -69,5 +70,27 @@ function getindex(cell::GridCell, index::Vararg{Int})
     n
 end
 
+
+"""
+    coarsen!(cell::GridCell)
+
+Reduce the refinement of the cell
+"""
+coarsen!(cell::GridCell) = resize!(cell.children, 0)
+
+"""
+    refine!(cell::GridCell)
+
+Refine the cell
+"""
+function refine!(cell::GridCell)
+    origin = cellorigin(cell)
+    width = cellwidth(cell)
+
+    resize!(cell.children, 2)
+    
+    cell.children .= [GridCell(origin, 0.5*width),
+                      GridCell(origin+0.5*width, 0.5*width)]
+end
 
 end
